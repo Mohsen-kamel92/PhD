@@ -1,0 +1,97 @@
+delta = 1.15*Fs_emg;
+TT_cut = [8.1 18.1 28.1 38.1];
+
+
+
+
+indxes = dsearchn(time,TT_cut');
+
+
+
+ang_x = [];
+tor_y = [];
+for i = 1:length(indxes)
+    ang_x = [ang_x angle(indxes(i):indxes(i)+delta)];
+    tor_y = [tor_y torque(indxes(i):indxes(i)+delta)];
+
+end
+
+ang_x = ang_x(:);
+tor_y = tor_y(:);
+p = polyfit(ang_x,tor_y,1);
+%rest_tor = polyval(p,angle);
+fake_ang = -3 : 1 : 37;
+rest_tor = polyval(p,fake_ang);
+
+
+
+stringP = ["polyP ECC: " + num2str(p)];
+
+
+
+
+%% === Passive Torque Model Comparison (from opposite contraction returns)
+clear; clc; close all;
+
+%% === Settings
+delta_sec = 1.15;  % duration of passive return to extract (sec)
+passive_windows_s = [8.1 18.1 28.1 38.1];  % passive return start times
+
+angle_range = -3 : 1 : 37;  % for plotting
+
+%% === Load ECC trial (used to extract CON passive model)
+fprintf('\n🔁 Select ECC synced file (for passive return → CON model)\n');
+[fecc, pecc] = uigetfile('*_sync_rawVolts.mat', 'Select ECC synced file');
+if isequal(fecc, 0), return; end
+SECC = load(fullfile(pecc, fecc));
+
+%% === Load CON trial (used to extract ECC passive model)
+fprintf('\n🔁 Select CON synced file (for passive return → ECC model)\n');
+[fcon, pcon] = uigetfile('*_sync_rawVolts.mat', 'Select CON synced file');
+if isequal(fcon, 0), return; end
+SCON = load(fullfile(pcon, fcon));
+
+%% === Extract passive data function
+extract_passive = @(S, delta_sec, TT) ...
+    cell2mat(arrayfun(@(t0) ...
+        [S.angle(dsearchn(S.time, t0) : ...
+                 min(end, dsearchn(S.time, t0) + round(delta_sec*S.Fs_emg)))', ...
+         S.torque(dsearchn(S.time, t0) : ...
+                 min(end, dsearchn(S.time, t0) + round(delta_sec*S.Fs_emg)))'], ...
+        TT, 'UniformOutput', false)');
+
+%% === Extract and fit from ECC file → Passive model for CON
+data_ECC = extract_passive(SECC, delta_sec, passive_windows_s);
+angle_ECC = data_ECC(:,1);
+torque_ECC = data_ECC(:,2);
+p_shortening = polyfit(angle_ECC, torque_ECC, 1);  % Shortening fit (ECC return → CON)
+fit_shortening = polyval(p_shortening, angle_range);
+
+%% === Extract and fit from CON file → Passive model for ECC
+data_CON = extract_passive(SCON, delta_sec, passive_windows_s);
+angle_CON = data_CON(:,1);
+torque_CON = data_CON(:,2);
+p_lengthening = polyfit(angle_CON, torque_CON, 1);  % Lengthening fit (CON return → ECC)
+fit_lengthening = polyval(p_lengthening, angle_range);
+
+%% === Plot
+figure; hold on;
+plot(angle_range, fit_lengthening, 'b', 'LineWidth', 2, 'DisplayName', 'Lengthening rot (ECC)');
+plot(angle_range, fit_shortening, 'r', 'LineWidth', 2, 'DisplayName', 'Shortening rot (CON)');
+
+xlabel('Angle (°)', 'FontWeight','bold');
+ylabel('Torque (Nm)', 'FontWeight','bold');
+title('Passive Torque Models from Opposite Contractions', 'FontWeight','bold');
+legend('Location','best');
+grid on;
+
+% Display polyfit coefficients
+text(5, min(fit_shortening)-0.5, ...
+     sprintf('polyP Shortening: %.6f   %.4f', p_shortening(1), p_shortening(2)), ...
+     'FontSize', 10, 'Color','r');
+
+text(5, min(fit_lengthening)-1.5, ...
+     sprintf('polyP Lengthening: %.6f   %.4f', p_lengthening(1), p_lengthening(2)), ...
+     'FontSize', 10, 'Color','b');
+
+set(gca, 'FontWeight','bold');
