@@ -49,7 +49,7 @@ reads only that file.
 | Stage | Script | Does |
 |---|---|---|
 | 00 | `Stage00_sync.m` | Aligns the dynamometer and HDsEMG recordings on a common time base |
-| 01 | `Stage01_Matching_Validity.m` | Locates repetitions, finds the constant velocity window, checks torque against the prescribed ramp |
+| 01 | `Stage01_Matching_validity.m` | Locates repetitions, finds the constant velocity window, checks torque against the prescribed ramp |
 | 02A | `Stage02A_active_torque.m` | Fits and subtracts the passive torque, converts the windows to sample indices |
 | 02B | `Stage02B_active_torqueMVC.m` | The same for the maximal voluntary contractions |
 | 03 | `Stage03_bipolar_SignalNormalization.m` | Bipolar derivation, band-pass filtering, RMS envelope, normalization to %MVA |
