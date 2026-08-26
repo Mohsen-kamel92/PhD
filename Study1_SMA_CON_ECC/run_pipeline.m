@@ -46,16 +46,21 @@ PIPE.ROOT = '';
 % Path to spm1d. Leave empty if it is already on the MATLAB path.
 PIPE.spm1dPath = '';
 
-% Stages to run, in order. Comment out any that should be skipped.
-PIPE.stages = { ...
+% Stages to run, in order.
+%
+% ALL_STAGES is the full pipeline, from raw recordings to the final figures.
+% STAGE6_ONLY covers the analyses that read groupData_stage6A.mat alone, which
+% is what this repository ships. Set PIPE.stages to whichever applies.
+
+ALL_STAGES = { ...
     'Stage00_sync.m'
     'Stage01_Matching_validity.m'
     'Stage02A_active_torque.m'
     'Stage02B_active_torqueMVC.m'
     'Stage03_bipolar_SignalNormalization.m'
     'Stage04_WeightedCentroid_processing.m'
-    'Stage05A_setLevel_aggregation_acrossR....m'
-    'Stage05B_ConditionLevel_aggregation_a....m'
+    'Stage05A_setLevel_aggregation_acrossReps.m'
+    'Stage05B_ConditionLevel_aggregation_acrossSets.m'
     'Stage06A_buildGroup_dataset.m'
     'Stage06B_scalar_RM_ANOVA.m'
     'Stage06C1_SPM_TimeSeries_inference.m'
@@ -64,6 +69,9 @@ PIPE.stages = { ...
     'Stage06C4_entropy_spm.m'
     };
 
+STAGE6_ONLY = ALL_STAGES(10:end);
+
+PIPE.stages = STAGE6_ONLY;
 % Settings passed to every stage. Anything not listed here is left to each
 % stage's own defaults.
 PIPE.shared = struct( ...
