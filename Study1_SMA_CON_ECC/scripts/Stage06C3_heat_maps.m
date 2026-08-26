@@ -28,8 +28,11 @@
 %   Maps are averaged across the whole analysis window, and an average does not
 %   depend on sample order.
 %
-% ON THE FIGURE
-%   %   overhang it. Panel height is computed from the data proportions rather than
+% % ON THE FIGURE
+%   The map spans exactly the electrode extent, so the outermost channels sit on
+%   its boundary. Their circles are drawn in data units rather than as scatter
+%   markers, which lets the axes clip them at the edge instead of letting them
+%   overhang it. Panel height is computed from the data proportions rather than
 %   set by axis equal, so each map fills its rectangle and the colour bar, the
 %   brackets and the scale bars all keep their alignment.
 %
@@ -95,7 +98,8 @@ CFG = set_default(CFG, 'centroidLineWidth',  2.2);
 % Figure layout, all in normalised figure units unless noted
 CFG = set_default(CFG, 'figSize',   [1100 560]);   % pixels
 CFG = set_default(CFG, 'leftM',     0.045);
-CFG = set_default(CFG, 'gapMid',    2*0.008);      % double the pair gap
+CFG = set_default(CFG, 'gapPair',   0.008);        % between CON and ECC
+CFG = set_default(CFG, 'gapMid',    2*CFG.gapPair);% between intensity pairs
 CFG = set_default(CFG, 'cbGap',     0.012);
 CFG = set_default(CFG, 'cbWidth',   0.020);
 CFG = set_default(CFG, 'rightM',    0.085);        % room for the colour bar label
@@ -475,8 +479,9 @@ function plot_map_bare(ax, xq, yq, Z, x_ch, y_ch, xc, yc, climVals, CFG, cmap)
     imagesc(ax, xq, yq, Z);
     set(ax,'YDir','normal');
        hold(ax,'on');
-    % Aspect ratio is locked through DataAspectRatio rather than axis equal, so
-    % the axes keep the position they were given and nothing shifts on resize.
+    % Both aspect modes stay automatic, so the axes fills the rectangle it was
+    % given. The true map proportions come from the panel height computed in
+    % section (10) instead.
     set(ax,'DataAspectRatioMode','auto','PlotBoxAspectRatioMode','auto');
 
     colormap(ax, cmap);
@@ -529,13 +534,6 @@ function draw_compass(cx, cy, r, figAspect)
     annotation('textbox', [cx-0.02      cy-r-0.045  0.04 0.04], 'String','P', t{:});
     annotation('textbox', [cx-rx-0.045  cy-0.02     0.04 0.04], 'String','L', t{:});
     annotation('textbox', [cx+rx+0.005  cy-0.02     0.04 0.04], 'String','M', t{:});
-end
-function sync_colorbar(ax, cb, gap, width) %#ok<DEFNU>
-% Keeps the colour bar the same height as the drawn map, which axis equal
-% recomputes whenever the figure changes shape.
-    if ~isvalid(ax) || ~isvalid(cb), return; end
-    p = ax.Position;
-    cb.Position = [p(1) + p(3) + gap, p(2), width, p(4)];
 end
 
 
