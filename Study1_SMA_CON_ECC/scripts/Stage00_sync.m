@@ -2,7 +2,7 @@
 %
 % PURPOSE
 %   Bring the dynamometer recording (SPIKE, 2 kHz) and the high-density EMG
-%   recording (MEACS, ~2049 Hz) onto a common time base, so that every later
+%   recording (MEACS, ~2048 Hz) onto a common time base, so that every later
 %   stage can index torque, joint angle and EMG at the same sample.
 %
 % SUPPORTS
